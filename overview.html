@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>System Overview</title>
+        <style>
+            .zoom {
+                transition: transform .3s;
+            }
+            .onzoom {
+                transition: opacity .6s;
+                opacity: 0;
+            }
+
+            .element:hover .zoom {
+                transform: scale(1.1) !important;
+            }
+            .element:hover .onzoom {
+                opacity: 1;
+            }
+
+            svg text {
+                font-size: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="svg">
+            <svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900">
+                <rect width="100%" height="100%" fill="#ffffff" />
+            </svg>
+        </div>
+        <script src="data.js"></script>
+        <script>
+        const svgns = "http://www.w3.org/2000/svg";
+
+        const svg = document.querySelector("svg");
+
+        for (let [key, group_data] of Object.entries(data)) {
+            let mg = document.createElementNS(svgns, "g");
+            mg.setAttribute("transform", "translate(200 200)");
+            mg.setAttribute("class", "element");
+
+            let shape = document.createElementNS(svgns, "g");
+            shape.setAttribute("class", "zoom");
+
+            let offsetX = 10;
+            let offsetY = 10;
+            let sizeX = 0;
+            let sizeY = 0;
+
+            for (let [name, shape_data] of Object.entries(group_data["shape"])) {
+                const rect = shape_data["rect"];
+
+                let newRect = document.createElementNS(svgns, "rect");
+
+                if (sizeX < rect["position"]["x"] + offsetX + rect["size"]["width"]) sizeX = rect["position"]["x"] + offsetX + rect["size"]["width"];
+                if (sizeY < rect["position"]["y"] + offsetY + rect["size"]["height"]) sizeY = rect["position"]["y"] + offsetY + rect["size"]["height"];
+
+                newRect.setAttribute("x", rect["position"]["x"] + offsetX);
+                newRect.setAttribute("y", rect["position"]["y"] + offsetY);
+                newRect.setAttribute("width", rect["size"]["width"]);
+                newRect.setAttribute("height", rect["size"]["height"]);
+                newRect.setAttribute("fill", "#5cceee");
+                newRect.setAttribute("stroke-width", "2px");
+                newRect.setAttribute("stroke", "#000000");
+
+                shape.appendChild(newRect);
+            }
+
+            let newRect = document.createElementNS(svgns, "rect");
+
+            newRect.setAttribute("id", key);
+            newRect.setAttribute("x", 1);
+            newRect.setAttribute("y", 1);
+            newRect.setAttribute("width", sizeX + 10);
+            newRect.setAttribute("height", sizeY + 10);
+            newRect.setAttribute("fill", "none");
+            newRect.setAttribute("stroke-width", "2px");
+            newRect.setAttribute("stroke", "#000000");
+
+            shape.appendChild(newRect);
+
+            shape.setAttribute("style", "transform: translate(" + sizeX / 20 + "px, " + sizeY / 20 + "px)");
+            mg.appendChild(shape);
+
+            let actionX = -100;
+
+            for (let [name, action_data] of Object.entries(group_data["actions"])) {
+                let newRect = document.createElementNS(svgns, "rect");
+
+                let action = document.createElementNS(svgns, "g");
+                action.setAttribute("class", "onzoom");
+
+                newRect.setAttribute("x", actionX);
+                newRect.setAttribute("y", sizeY + 40);
+                newRect.setAttribute("width", 200);
+                newRect.setAttribute("height", 100);
+                newRect.setAttribute("fill", "#eee5cc");
+                newRect.setAttribute("stroke-width", "2px");
+                newRect.setAttribute("stroke", "#000000");
+
+                let newText = document.createElementNS(svgns, "text");
+                newText.setAttribute("x", actionX + 10);
+                newText.setAttribute("y", sizeY + 60);
+
+                newText.appendChild(document.createTextNode(action_data["name"]));
+
+                let line1 = document.createElementNS(svgns, "tspan");
+                line1.setAttribute("x", actionX + 20);
+                line1.setAttribute("dy", 30);
+                line1.appendChild(document.createTextNode(action_data["description"]));
+
+                newText.appendChild(line1);
+
+                action.appendChild(newRect);
+                action.appendChild(newText);
+
+                actionX += 220;
+
+                mg.appendChild(action);
+            }
+
+            let eventX = -100;
+
+            for (let [name, event_data] of Object.entries(group_data["events"])) {
+                let newRect = document.createElementNS(svgns, "rect");
+
+                let event = document.createElementNS(svgns, "g");
+                event.setAttribute("class", "onzoom");
+
+                newRect.setAttribute("x", eventX);
+                newRect.setAttribute("y", -140);
+                newRect.setAttribute("width", 200);
+                newRect.setAttribute("height", 100);
+                newRect.setAttribute("fill", "#eee5cc");
+                newRect.setAttribute("stroke-width", "2px");
+                newRect.setAttribute("stroke", "#000000");
+
+                let newText = document.createElementNS(svgns, "text");
+                newText.setAttribute("x", eventX + 10);
+                newText.setAttribute("y", -120);
+
+                newText.appendChild(document.createTextNode(event_data["name"]));
+
+                for (let [cl_name, checklist_data] of Object.entries(event_data["checklist"])) {
+                    let line1 = document.createElementNS(svgns, "tspan");
+                    line1.setAttribute("x", eventX + 20);
+                    line1.setAttribute("dy", 30);
+                    line1.appendChild(document.createTextNode(checklist_data["method"]));
+
+                    newText.appendChild(line1);
+                }
+
+                event.appendChild(newRect);
+                event.appendChild(newText);
+
+                eventX += 220;
+
+                mg.appendChild(event);
+            }
+
+            svg.appendChild(mg);
+        };
+
+
+        </script>
+    </body>
+</html>
