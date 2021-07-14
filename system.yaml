@@ -42,3 +42,23 @@ comp1:
     - name: Comp not configured correctly?
       method: Stuff is there by in multiple lists
       action: Talk to d
+
+comp2:
+  shape:
+  - rect:
+      text: Comp2
+      position:
+        x: 0
+        y: 0
+      size:
+        width: 150
+        height: 40
+  actions:
+  - name: Comp upgrade
+    description: |
+      Install the new comp via "apt"
+      Restart the comp
+    consequences:
+    - Temporary no new stuff is picked up
+    - Active lists will become two
+  events: []

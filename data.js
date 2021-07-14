@@ -67,6 +67,34 @@ data = {
         ]
       }
     ]
+  },
+  "comp2": {
+    "shape": [
+      {
+        "rect": {
+          "text": "Comp2",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "size": {
+            "width": 150,
+            "height": 40
+          }
+        }
+      }
+    ],
+    "actions": [
+      {
+        "name": "Comp upgrade",
+        "description": "Install the new comp via \"apt\"\nRestart the comp\n",
+        "consequences": [
+          "Temporary no new stuff is picked up",
+          "Active lists will become two"
+        ]
+      }
+    ],
+    "events": []
   }
 }
 ;

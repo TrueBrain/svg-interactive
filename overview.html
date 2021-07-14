@@ -23,6 +23,44 @@
             svg text {
                 font-size: 20px;
             }
+
+            svg rect.group {
+                fill: none;
+                stroke-width: 2px;
+                stroke: #000000;
+            }
+
+            svg rect.component {
+                fill: #5cceee;
+                stroke-width: 2px;
+                stroke: #000000;
+            }
+            svg rect.action-title {
+                fill: #eee5cc;
+                stroke-width: 2px;
+                stroke: #000000;
+            }
+            svg rect.action-body {
+                fill: #eee5cc;
+                stroke-width: 2px;
+                stroke: #000000;
+            }
+            svg text.action-body {
+                font-size: 16px;
+            }
+            svg rect.event-title {
+                fill: #eee5cc;
+                stroke-width: 2px;
+                stroke: #000000;
+            }
+            svg rect.event-body {
+                fill: #eee5cc;
+                stroke-width: 2px;
+                stroke: #000000;
+            }
+            svg text.event-body {
+                font-size: 16px;
+            }
         </style>
     </head>
     <body>
@@ -35,11 +73,59 @@
         <script>
         const svgns = "http://www.w3.org/2000/svg";
 
+        function createRect(className, x, y, width, height, rounded) {
+            let rect = document.createElementNS(svgns, "rect");
+            rect.setAttribute("class", className);
+            rect.setAttribute("x", x);
+            rect.setAttribute("y", y);
+            rect.setAttribute("width", width);
+            rect.setAttribute("height", height);
+
+            if (rounded) {
+                rect.setAttribute("rx", "11");
+                rect.setAttribute("ry", "11");
+            }
+
+            return rect;
+        }
+
+        function createText(className, x, y, value) {
+            let text = document.createElementNS(svgns, "text");
+            text.setAttribute("class", className);
+            text.setAttribute("x", x);
+            text.setAttribute("y", y);
+
+            if (value) {
+                text.appendChild(document.createTextNode(value));
+            }
+            return text;
+        }
+
+        function createTextSpan(text, x, dy, value) {
+            let line = document.createElementNS(svgns, "tspan");
+            line.setAttribute("x", x);
+            line.setAttribute("dy", dy);
+            line.appendChild(document.createTextNode(value));
+
+            text.appendChild(line);
+            return line
+        }
+
+        function getBBox(obj) {
+            svg.appendChild(obj);
+            const bbox = obj.getBBox();
+            svg.removeChild(obj);
+
+            return bbox;
+        }
+
         const svg = document.querySelector("svg");
+
+        let compX = 200;
 
         for (let [key, group_data] of Object.entries(data)) {
             let mg = document.createElementNS(svgns, "g");
-            mg.setAttribute("transform", "translate(200 200)");
+            mg.setAttribute("transform", "translate(" + compX + " 200)");
             mg.setAttribute("class", "element");
 
             let shape = document.createElementNS(svgns, "g");
@@ -51,36 +137,20 @@
             let sizeY = 0;
 
             for (let [name, shape_data] of Object.entries(group_data["shape"])) {
-                const rect = shape_data["rect"];
+                const rect_data = shape_data["rect"];
 
-                let newRect = document.createElementNS(svgns, "rect");
+                const x = rect_data["position"]["x"] + offsetX;
+                const y = rect_data["position"]["y"] + offsetY;
 
-                if (sizeX < rect["position"]["x"] + offsetX + rect["size"]["width"]) sizeX = rect["position"]["x"] + offsetX + rect["size"]["width"];
-                if (sizeY < rect["position"]["y"] + offsetY + rect["size"]["height"]) sizeY = rect["position"]["y"] + offsetY + rect["size"]["height"];
+                if (sizeX < x + rect_data["size"]["width"]) sizeX = x + rect_data["size"]["width"];
+                if (sizeY < y + rect_data["size"]["height"]) sizeY = y + rect_data["size"]["height"];
 
-                newRect.setAttribute("x", rect["position"]["x"] + offsetX);
-                newRect.setAttribute("y", rect["position"]["y"] + offsetY);
-                newRect.setAttribute("width", rect["size"]["width"]);
-                newRect.setAttribute("height", rect["size"]["height"]);
-                newRect.setAttribute("fill", "#5cceee");
-                newRect.setAttribute("stroke-width", "2px");
-                newRect.setAttribute("stroke", "#000000");
-
-                shape.appendChild(newRect);
+                let rect = createRect("component", x, y, rect_data["size"]["width"], rect_data["size"]["height"]);
+                shape.appendChild(rect);
             }
 
-            let newRect = document.createElementNS(svgns, "rect");
-
-            newRect.setAttribute("id", key);
-            newRect.setAttribute("x", 1);
-            newRect.setAttribute("y", 1);
-            newRect.setAttribute("width", sizeX + 10);
-            newRect.setAttribute("height", sizeY + 10);
-            newRect.setAttribute("fill", "none");
-            newRect.setAttribute("stroke-width", "2px");
-            newRect.setAttribute("stroke", "#000000");
-
-            shape.appendChild(newRect);
+            let rect = createRect("group", 1, 1, sizeX + 10, sizeY + 10);
+            shape.appendChild(rect);
 
             shape.setAttribute("style", "transform: translate(" + sizeX / 20 + "px, " + sizeY / 20 + "px)");
             mg.appendChild(shape);
@@ -88,36 +158,34 @@
             let actionX = -100;
 
             for (let [name, action_data] of Object.entries(group_data["actions"])) {
-                let newRect = document.createElementNS(svgns, "rect");
-
                 let action = document.createElementNS(svgns, "g");
                 action.setAttribute("class", "onzoom");
 
-                newRect.setAttribute("x", actionX);
-                newRect.setAttribute("y", sizeY + 40);
-                newRect.setAttribute("width", 200);
-                newRect.setAttribute("height", 100);
-                newRect.setAttribute("fill", "#eee5cc");
-                newRect.setAttribute("stroke-width", "2px");
-                newRect.setAttribute("stroke", "#000000");
+                const y = sizeY + 40;
 
-                let newText = document.createElementNS(svgns, "text");
-                newText.setAttribute("x", actionX + 10);
-                newText.setAttribute("y", sizeY + 60);
+                {
+                    const text = createText("action-title", actionX + 10, y + 20, action_data["name"]);
+                    const bbox = getBBox(text);
+                    const rect = createRect("action-title", actionX, y, bbox.width + 20, bbox.height + 6, true);
 
-                newText.appendChild(document.createTextNode(action_data["name"]));
+                    action.appendChild(rect);
+                    action.appendChild(text);
+                }
 
-                let line1 = document.createElementNS(svgns, "tspan");
-                line1.setAttribute("x", actionX + 20);
-                line1.setAttribute("dy", 30);
-                line1.appendChild(document.createTextNode(action_data["description"]));
+                {
+                    const text = createText("action-body", actionX + 10, y + 35);
+                    for (let line of action_data["description"].split("\n")) {
+                        if (line === "") continue;
+                        createTextSpan(text, actionX + 20, 20, "- " + line);
+                    }
 
-                newText.appendChild(line1);
+                    const bbox = getBBox(text);
+                    const rect = createRect("action-body", actionX + 10, y + 35, bbox.width + 20, bbox.height + 12);
 
-                action.appendChild(newRect);
-                action.appendChild(newText);
-
-                actionX += 220;
+                    action.appendChild(rect);
+                    action.appendChild(text);
+                    actionX += bbox.width + 40;
+                }
 
                 mg.appendChild(action);
             }
@@ -130,38 +198,36 @@
                 let event = document.createElementNS(svgns, "g");
                 event.setAttribute("class", "onzoom");
 
-                newRect.setAttribute("x", eventX);
-                newRect.setAttribute("y", -140);
-                newRect.setAttribute("width", 200);
-                newRect.setAttribute("height", 100);
-                newRect.setAttribute("fill", "#eee5cc");
-                newRect.setAttribute("stroke-width", "2px");
-                newRect.setAttribute("stroke", "#000000");
-
-                let newText = document.createElementNS(svgns, "text");
-                newText.setAttribute("x", eventX + 10);
-                newText.setAttribute("y", -120);
-
-                newText.appendChild(document.createTextNode(event_data["name"]));
-
+                const body_text = createText("event-body", eventX + 10, -140 + 35);
                 for (let [cl_name, checklist_data] of Object.entries(event_data["checklist"])) {
-                    let line1 = document.createElementNS(svgns, "tspan");
-                    line1.setAttribute("x", eventX + 20);
-                    line1.setAttribute("dy", 30);
-                    line1.appendChild(document.createTextNode(checklist_data["method"]));
-
-                    newText.appendChild(line1);
+                    createTextSpan(body_text, eventX + 20, 20, checklist_data["method"]);
                 }
 
-                event.appendChild(newRect);
-                event.appendChild(newText);
+                const body_bbox = getBBox(body_text);
+                const y = -body_bbox.height - 50;
+                body_text.setAttribute("y", y);
 
-                eventX += 220;
+                const body_rect = createRect("event-body", eventX + 10, y, body_bbox.width + 20, body_bbox.height + 12);
+
+                {
+                    const text = createText("event-title", eventX + 10, y - 35 + 20, event_data["name"]);
+                    const bbox = getBBox(text);
+                    const rect = createRect("event-title", eventX, y - 35, bbox.width + 20, bbox.height + 6, true);
+
+                    event.appendChild(rect);
+                    event.appendChild(text);
+                }
+
+                event.appendChild(body_rect);
+                event.appendChild(body_text);
+                eventX += body_bbox.width + 40;
 
                 mg.appendChild(event);
             }
 
             svg.appendChild(mg);
+
+            compX += 400;
         };
 
 
